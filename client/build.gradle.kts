@@ -1,10 +1,11 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
     namespace = "cn.bujian.wstunnel.client"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "cn.bujian.wstunnel.client"

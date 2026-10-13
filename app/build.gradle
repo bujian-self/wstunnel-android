@@ -1,0 +1,86 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+	namespace "hev.sockstun"
+	compileSdkVersion 34
+	ndkVersion "29.0.14206865"
+
+	defaultConfig {
+		applicationId "cn.bujian.wstunnel"
+		minSdkVersion 24
+		targetSdkVersion 34
+		versionCode 2
+		versionName "0.2.0-beta"
+		setProperty("archivesBaseName", "app")
+		ndk {
+			abiFilters "arm64-v8a"
+		}
+		externalNativeBuild {
+			ndkBuild {
+				arguments "APP_CFLAGS+=-DPKGNAME=hev/sockstun -ffile-prefix-map=${rootDir}=."
+				arguments "APP_LDFLAGS+=-Wl,--build-id=none"
+			}
+		}
+	}
+
+	signingConfigs {
+		release {
+		}
+	}
+
+	buildTypes {
+		release {
+			minifyEnabled false
+			signingConfig signingConfigs.release
+		}
+		debug {
+			minifyEnabled false
+			signingConfig signingConfigs.release
+		}
+	}
+
+	def propsFile = rootProject.file('store.properties')
+	def configName = 'release'
+
+	if (propsFile.exists() && android.signingConfigs.hasProperty(configName)) {
+		def props = new Properties()
+		props.load(new FileInputStream(propsFile))
+		if (props!=null && props.containsKey('storeFile')) {
+			android.signingConfigs[configName].storeFile = rootProject.file(props['storeFile'])
+			android.signingConfigs[configName].storePassword = props['storePassword']
+			android.signingConfigs[configName].keyAlias = props['keyAlias']
+			android.signingConfigs[configName].keyPassword = props['keyPassword']
+		}
+	}
+
+	externalNativeBuild {
+		ndkBuild {
+			path "src/main/jni/Android.mk"
+		}
+	}
+
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_17
+		targetCompatibility JavaVersion.VERSION_17
+	}
+
+	kotlinOptions {
+		jvmTarget = "17"
+	}
+
+	lintOptions {
+		checkReleaseBuilds false
+		abortOnError false
+	}
+
+	dependenciesInfo {
+		includeInApk = false
+		includeInBundle = false
+	}
+}
+
+dependencies {
+	implementation 'androidx.appcompat:appcompat:1.7.0'
+	implementation 'com.google.android.material:material:1.12.0'
+}

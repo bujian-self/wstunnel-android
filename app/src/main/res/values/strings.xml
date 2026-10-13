@@ -1,4 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">wstunnel</string>
+	<string name="app_name">wstunnel VPN</string>
+	<string name="socks_addr">SOCKS5 地址</string>
+	<string name="socks_udp_addr">SOCKS5 UDP 地址</string>
+	<string name="socks_port">SOCKS5 端口</string>
+	<string name="socks_user">SOCKS5 用户名</string>
+	<string name="socks_pass">SOCKS5 密码</string>
+	<string name="dns_ipv4">DNS IPv4</string>
+	<string name="dns_ipv6">DNS IPv6</string>
+	<string name="udp_in_tcp">UDP 经 TCP 中继</string>
+	<string name="remote_dns">远程 DNS</string>
+	<string name="ipv4">IPv4</string>
+	<string name="ipv6">IPv6</string>
+	<string name="global">全局</string>
+	<string name="apps">应用</string>
+	<string name="save">保存</string>
+	<string name="control_enable">启用</string>
+	<string name="control_disable">停用</string>
+	<string name="search">搜索</string>
+	<string name="profile_prev">◀</string>
+	<string name="profile_next">▶</string>
+	<string name="profile_rename">重命名</string>
+	<string name="profile_add">新增</string>
+	<string name="profile_delete">删除</string>
+	<string name="profile_name">配置名称</string>
+	<string name="profile_limit">已达配置数量上限（13）</string>
+	<string name="profile_last">无法删除最后一个配置</string>
+	<string name="profile_delete_confirm">删除配置“%s”？</string>
+	<string name="wstunnel_settings">wstunnel 设置（全局）</string>
+	<string name="wstunnel_server">服务器地址（留空则禁用 wstunnel）</string>
+	<string name="wstunnel_sni">SNI 伪装域名（可选）</string>
+	<string name="wstunnel_port">本地 SOCKS5 端口</string>
+	<string name="wstunnel_pool">连接池（1-64）</string>
+	<string name="wstunnel_user">用户名（可选）</string>
+	<string name="wstunnel_pass">密码</string>
+	<string name="wstunnel_saved">已保存</string>
 </resources>
