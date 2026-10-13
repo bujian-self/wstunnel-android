@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "wstunnel-mobile"
 include(":app")
+include(":client")
