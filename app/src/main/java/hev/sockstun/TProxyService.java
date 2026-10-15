@@ -36,12 +36,17 @@ public class TProxyService extends VpnService {
 
 	public static final String ACTION_CONNECT = "hev.sockstun.CONNECT";
 	public static final String ACTION_DISCONNECT = "hev.sockstun.DISCONNECT";
+	/* Broadcast to the main process: SharedPreferences is per-process,
+	   so enable-state changes made here must be pushed explicitly. */
+	public static final String ACTION_STATE = "cn.bujian.wstunnel.VPN_STATE";
+	public static final String EXTRA_ENABLE = "enable";
 
 	static {
 		System.loadLibrary("hev-socks5-tunnel");
 	}
 
-	private ParcelFileDescriptor tunFd = null;
+	private volatile ParcelFileDescriptor tunFd = null;
+	private volatile boolean stopping = false;
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -67,12 +72,44 @@ public class TProxyService extends VpnService {
 	public void startService() {
 		if (tunFd != null)
 		  return;
+		stopping = false;
+		/* waitForPort blocks up to 15s: never on the main thread. */
+		new Thread(this::doStartService, "vpn-start").start();
+	}
 
+	private void doStartService() {
 		Preferences prefs = new Preferences(this);
 		cn.bujian.wstunnel.LogBuffer.init(getFilesDir());
 		cn.bujian.wstunnel.LogBuffer.append("[vpn] start requested");
 
-		/* VPN */
+		/* The only upstream is wstunnel, driven by the active profile.
+		   It must be listening on its local socks port BEFORE the tun exists,
+		   so any failure leaves no half-established VPN behind. */
+		String wsServer = prefs.getWstunnelServer().trim();
+		if (wsServer.isEmpty()) {
+			cn.bujian.wstunnel.LogBuffer.append("[vpn] server address empty, aborting start");
+			failStart(prefs);
+			return;
+		}
+		boolean wsOk = cn.bujian.wstunnel.Wstunnel.ensureStarted(
+			getApplicationContext(), wsServer,
+			prefs.getWstunnelSni().trim(), prefs.getWstunnelPort(),
+			prefs.getWstunnelPool(), prefs.getWstunnelUser().trim(),
+			prefs.getWstunnelPass());
+		if (stopping) {
+			cn.bujian.wstunnel.Wstunnel.stop();
+			cn.bujian.wstunnel.LogBuffer.append("[vpn] start aborted by stop");
+			return;
+		}
+		if (!wsOk) {
+			cn.bujian.wstunnel.LogBuffer.append("[vpn] wstunnel failed, aborting start");
+			failStart(prefs);
+			return;
+		}
+
+		String socksAddr = "127.0.0.1";
+		int socksPort = prefs.getWstunnelPort();
+
 		String session = new String();
 		VpnService.Builder builder = new VpnService.Builder();
 		builder.setBlocking(false);
@@ -125,31 +162,20 @@ public class TProxyService extends VpnService {
 		builder.setSession(session);
 		tunFd = builder.establish();
 		if (tunFd == null) {
-			stopSelf();
+			cn.bujian.wstunnel.LogBuffer.append("[vpn] tun establish failed, aborting start");
+			failStart(prefs);
 			return;
 		}
-
-		/* wstunnel: global single instance; enabled only when a server URL is set.
-		   When enabled the tun2socks upstream points at wstunnel's local SOCKS5
-		   listener instead of the profile's own SOCKS5 target. */
-		String wsServer = prefs.getWstunnelServer().trim();
-		boolean useWs = !wsServer.isEmpty();
-		if (useWs) {
-			boolean wsOk = cn.bujian.wstunnel.Wstunnel.ensureStarted(
-				getApplicationContext(), wsServer, prefs.getWstunnelSni().trim(),
-				prefs.getWstunnelPort(), prefs.getWstunnelPool(),
-				prefs.getWstunnelUser().trim(), prefs.getWstunnelPass());
-			if (!wsOk) {
-				cn.bujian.wstunnel.LogBuffer.append("[vpn] wstunnel failed, aborting start");
-				stopSelf();
-				return;
+		if (stopping) {
+			try {
+				tunFd.close();
+			} catch (IOException e) {
 			}
-		} else {
+			tunFd = null;
 			cn.bujian.wstunnel.Wstunnel.stop();
+			cn.bujian.wstunnel.LogBuffer.append("[vpn] start aborted by stop");
+			return;
 		}
-
-		String socksAddr = useWs ? "127.0.0.1" : prefs.getSocksAddress();
-		int socksPort = useWs ? prefs.getWstunnelPort() : prefs.getSocksPort();
 
 		/* TProxy */
 		File tproxy_file = new File(getCacheDir(), "tproxy.conf");
@@ -157,26 +183,17 @@ public class TProxyService extends VpnService {
 			tproxy_file.createNewFile();
 			FileOutputStream fos = new FileOutputStream(tproxy_file, false);
 
-			String tproxy_conf = "misc:\n" +
-				"  task-stack-size: " + prefs.getTaskStackSize() + "\n" +
-				"tunnel:\n" +
+		String tproxy_conf = "misc:\n" +
+			"  task-stack-size: " + prefs.getTaskStackSize() + "\n" +
+			"  log-file: '" + new File(getFilesDir(), "wstunnel.log").getAbsolutePath() + "'\n" +
+			"  log-level: info\n" +
+			"tunnel:\n" +
 				"  mtu: " + prefs.getTunnelMtu() + "\n" +
-				"  icmp: 'reply'\n";
-
-			tproxy_conf += "socks5:\n" +
+				"  icmp: 'reply'\n" +
+				"socks5:\n" +
 				"  port: " + socksPort + "\n" +
 				"  address: '" + socksAddr + "'\n" +
 				"  udp: '" + (prefs.getUdpInTcp() ? "tcp" : "udp") + "'\n";
-
-			if (!useWs && !prefs.getSocksUdpAddress().isEmpty()) {
-				tproxy_conf += "  udp-address: '" + prefs.getSocksUdpAddress() + "'\n";
-			}
-
-			if (!useWs && !prefs.getSocksUsername().isEmpty() &&
-				!prefs.getSocksPassword().isEmpty()) {
-				tproxy_conf += "  username: '" + prefs.getSocksUsername() + "'\n";
-				tproxy_conf += "  password: '" + prefs.getSocksPassword() + "'\n";
-			}
 
 			if (prefs.getRemoteDns()) {
 				tproxy_conf += "mapdns:\n" +
@@ -190,41 +207,77 @@ public class TProxyService extends VpnService {
 			fos.write(tproxy_conf.getBytes());
 			fos.close();
 		} catch (IOException e) {
+			/* Leave nothing half-started: drop the tun, roll back enable. */
+			try {
+				tunFd.close();
+			} catch (IOException e2) {
+			}
+			tunFd = null;
+			cn.bujian.wstunnel.LogBuffer.append("[vpn] tproxy.conf write failed, aborting start");
+			failStart(prefs);
 			return;
 		}
 		TProxyStartService(tproxy_file.getAbsolutePath(), tunFd.getFd());
 		cn.bujian.wstunnel.LogBuffer.append("[vpn] tproxy started (upstream " +
-			socksAddr + ":" + socksPort + (useWs ? ", via wstunnel" : "") + ")");
+			socksAddr + ":" + socksPort + ", via wstunnel)");
 		prefs.setEnable(true);
 		QSTileService.requestUpdate(this);
+		broadcastState(true);
 
 		String channelName = "socks5";
 		initNotificationChannel(channelName);
 		createNotification(channelName);
 	}
 
-	public void stopService() {
-		if (tunFd == null)
-		  return;
-
-		new Preferences(this).setEnable(false);
+	/* Full rollback on any start failure: nothing half-established stays behind. */
+	private void failStart(Preferences prefs) {
+		prefs.setEnable(false);
 		QSTileService.requestUpdate(this);
+		broadcastState(false);
+		stopSelf();
+	}
 
-		stopForeground(true);
+	private void broadcastState(boolean enable) {
+		Intent i = new Intent(ACTION_STATE);
+		i.setPackage(getPackageName());
+		i.putExtra(EXTRA_ENABLE, enable);
+		sendBroadcast(i);
+	}
 
-		/* TProxy */
-		TProxyStopService();
+	public void stopService() {
+		stopping = true;
+		new Thread(this::doStopService, "vpn-stop").start();
+	}
 
-		/* wstunnel child process must die before this :native process exits */
+	private void doStopService() {
+		ParcelFileDescriptor fd = tunFd;
+		if (fd != null) {
+			new Preferences(this).setEnable(false);
+			QSTileService.requestUpdate(this);
+			broadcastState(false);
+
+			stopForeground(true);
+
+			/* TProxy */
+			TProxyStopService();
+
+			/* VPN */
+			try {
+				fd.close();
+			} catch (IOException e) {
+			}
+			tunFd = null;
+		} else {
+			new Preferences(this).setEnable(false);
+			QSTileService.requestUpdate(this);
+			broadcastState(false);
+		}
+
+		/* wstunnel child process must die before this :native process exits.
+		   Wstunnel.stop() waits for any in-flight ensureStarted (same lock),
+		   so the child is always reaped before exit. */
 		cn.bujian.wstunnel.Wstunnel.stop();
 		cn.bujian.wstunnel.LogBuffer.append("[vpn] stopped");
-
-		/* VPN */
-		try {
-			tunFd.close();
-		} catch (IOException e) {
-		}
-		tunFd = null;
 
 		System.exit(0);
 	}

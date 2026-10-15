@@ -10,6 +10,7 @@ import java.util.Locale
  * MainActivity runs in the main process, so an in-memory buffer cannot be shared.
  */
 object LogBuffer {
+    private const val TAG = "Wstunnel"
     @Volatile
     private var file: File? = null
     private const val MAX_BYTES = 128 * 1024
@@ -27,8 +28,9 @@ object LogBuffer {
 
     @JvmStatic
     fun append(line: String) {
-        val f = file ?: return
         val ts = SimpleDateFormat("MM-dd HH:mm:ss", Locale.US).format(Date())
+        android.util.Log.i(TAG, "$ts $line")
+        val f = file ?: return
         synchronized(this) {
             runCatching { f.appendText("$ts $line\n") }
         }

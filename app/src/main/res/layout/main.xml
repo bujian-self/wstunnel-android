@@ -40,73 +40,87 @@
 				android:text="@string/profile_next"/>
 		</LinearLayout>
 		<com.google.android.material.textfield.TextInputLayout
-			android:id="@+id/til_socks_addr"
+			android:id="@+id/til_ws_address"
 			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:hint="@string/socks_addr">
+			android:hint="@string/ws_address">
 			<com.google.android.material.textfield.TextInputEditText
-				android:id="@+id/socks_addr"
+				android:id="@+id/ws_address"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="textUri"
+				android:maxLines="1"/>
+		</com.google.android.material.textfield.TextInputLayout>
+		<com.google.android.material.textfield.TextInputLayout
+			android:id="@+id/til_ws_sni"
+			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:hint="@string/ws_sni">
+			<com.google.android.material.textfield.TextInputEditText
+				android:id="@+id/ws_sni"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:inputType="text"
 				android:maxLines="1"/>
 		</com.google.android.material.textfield.TextInputLayout>
 		<com.google.android.material.textfield.TextInputLayout
-			android:id="@+id/til_socks_udp_addr"
+			android:id="@+id/til_ws_port"
 			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
-			android:hint="@string/socks_udp_addr">
+			android:hint="@string/ws_port">
 			<com.google.android.material.textfield.TextInputEditText
-				android:id="@+id/socks_udp_addr"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:inputType="text"
-				android:maxLines="1"/>
-		</com.google.android.material.textfield.TextInputLayout>
-		<com.google.android.material.textfield.TextInputLayout
-			android:id="@+id/til_socks_port"
-			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="8dp"
-			android:hint="@string/socks_port">
-			<com.google.android.material.textfield.TextInputEditText
-				android:id="@+id/socks_port"
+				android:id="@+id/ws_port"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:inputType="number"
 				android:maxLines="1"/>
 		</com.google.android.material.textfield.TextInputLayout>
 		<com.google.android.material.textfield.TextInputLayout
-			android:id="@+id/til_socks_user"
+			android:id="@+id/til_ws_user"
 			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
-			android:hint="@string/socks_user">
+			android:hint="@string/ws_user">
 			<com.google.android.material.textfield.TextInputEditText
-				android:id="@+id/socks_user"
+				android:id="@+id/ws_user"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:inputType="text"
 				android:maxLines="1"/>
 		</com.google.android.material.textfield.TextInputLayout>
 		<com.google.android.material.textfield.TextInputLayout
-			android:id="@+id/til_socks_pass"
+			android:id="@+id/til_ws_pass"
 			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
-			android:hint="@string/socks_pass"
+			android:hint="@string/ws_pass"
 			app:endIconMode="password_toggle">
 			<com.google.android.material.textfield.TextInputEditText
-				android:id="@+id/socks_pass"
+				android:id="@+id/ws_pass"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
 				android:inputType="textPassword"
+				android:maxLines="1"/>
+		</com.google.android.material.textfield.TextInputLayout>
+		<com.google.android.material.textfield.TextInputLayout
+			android:id="@+id/til_ws_pool"
+			style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:hint="@string/ws_pool">
+			<com.google.android.material.textfield.TextInputEditText
+				android:id="@+id/ws_pool"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:inputType="number"
 				android:maxLines="1"/>
 		</com.google.android.material.textfield.TextInputLayout>
 		<com.google.android.material.textfield.TextInputLayout
@@ -185,18 +199,6 @@
 				android:layout_height="wrap_content"
 				android:layout_weight="1"
 				android:text="@string/apps"/>
-		</LinearLayout>
-		<LinearLayout
-			android:orientation="horizontal"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:layout_marginTop="8dp">
-			<Button
-				android:id="@+id/wstunnel_settings"
-				style="?attr/materialButtonOutlinedStyle"
-				android:layout_width="match_parent"
-				android:layout_height="wrap_content"
-				android:text="@string/wstunnel_settings"/>
 		</LinearLayout>
 		<LinearLayout
 			android:orientation="horizontal"

@@ -17,11 +17,6 @@ import android.content.SharedPreferences;
 public class Preferences
 {
 	public static final String PREFS_NAME = "SocksPrefs";
-	public static final String SOCKS_ADDR = "SocksAddr";
-	public static final String SOCKS_UDP_ADDR = "SocksUdpAddr";
-	public static final String SOCKS_PORT = "SocksPort";
-	public static final String SOCKS_USER = "SocksUser";
-	public static final String SOCKS_PASS = "SocksPass";
 	public static final String DNS_IPV4 = "DnsIpv4";
 	public static final String DNS_IPV6 = "DnsIpv6";
 	public static final String IPV4 = "Ipv4";
@@ -35,7 +30,7 @@ public class Preferences
 	public static final String PROFILE_COUNT = "ProfileCount";
 	public static final String SELECTED = "Selected";
 
-	/* Global (non-profile) wstunnel settings: one instance shared by all profiles. */
+	/* wstunnel settings — the only upstream configuration, profile-scoped. */
 	public static final String WS_SERVER = "WstunnelServer";
 	public static final String WS_SNI = "WstunnelSni";
 	public static final String WS_PORT = "WstunnelPort";
@@ -68,16 +63,6 @@ public class Preferences
 
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putString(key(0, NAME), "Default");
-		if (prefs.contains(SOCKS_ADDR))
-		  editor.putString(key(0, SOCKS_ADDR), prefs.getString(SOCKS_ADDR, ""));
-		if (prefs.contains(SOCKS_UDP_ADDR))
-		  editor.putString(key(0, SOCKS_UDP_ADDR), prefs.getString(SOCKS_UDP_ADDR, ""));
-		if (prefs.contains(SOCKS_PORT))
-		  editor.putInt(key(0, SOCKS_PORT), prefs.getInt(SOCKS_PORT, 1080));
-		if (prefs.contains(SOCKS_USER))
-		  editor.putString(key(0, SOCKS_USER), prefs.getString(SOCKS_USER, ""));
-		if (prefs.contains(SOCKS_PASS))
-		  editor.putString(key(0, SOCKS_PASS), prefs.getString(SOCKS_PASS, ""));
 		if (prefs.contains(DNS_IPV4))
 		  editor.putString(key(0, DNS_IPV4), prefs.getString(DNS_IPV4, ""));
 		if (prefs.contains(DNS_IPV6))
@@ -94,11 +79,6 @@ public class Preferences
 		  editor.putBoolean(key(0, REMOTE_DNS), prefs.getBoolean(REMOTE_DNS, true));
 		if (prefs.contains(APPS))
 		  editor.putStringSet(key(0, APPS), new HashSet<String>(prefs.getStringSet(APPS, new HashSet<String>())));
-		editor.remove(SOCKS_ADDR);
-		editor.remove(SOCKS_UDP_ADDR);
-		editor.remove(SOCKS_PORT);
-		editor.remove(SOCKS_USER);
-		editor.remove(SOCKS_PASS);
 		editor.remove(DNS_IPV4);
 		editor.remove(DNS_IPV6);
 		editor.remove(IPV4);
@@ -117,11 +97,6 @@ public class Preferences
 	   in ascending order within one editor is safe. */
 	private void copyProfile(SharedPreferences.Editor editor, int src, int dst) {
 		editor.putString(key(dst, NAME), prefs.getString(key(src, NAME), "Default"));
-		editor.putString(key(dst, SOCKS_ADDR), prefs.getString(key(src, SOCKS_ADDR), "127.0.0.1"));
-		editor.putString(key(dst, SOCKS_UDP_ADDR), prefs.getString(key(src, SOCKS_UDP_ADDR), ""));
-		editor.putInt(key(dst, SOCKS_PORT), prefs.getInt(key(src, SOCKS_PORT), 1080));
-		editor.putString(key(dst, SOCKS_USER), prefs.getString(key(src, SOCKS_USER), ""));
-		editor.putString(key(dst, SOCKS_PASS), prefs.getString(key(src, SOCKS_PASS), ""));
 		editor.putString(key(dst, DNS_IPV4), prefs.getString(key(src, DNS_IPV4), "8.8.8.8"));
 		editor.putString(key(dst, DNS_IPV6), prefs.getString(key(src, DNS_IPV6), "2001:4860:4860::8888"));
 		editor.putBoolean(key(dst, IPV4), prefs.getBoolean(key(src, IPV4), true));
@@ -129,16 +104,17 @@ public class Preferences
 		editor.putBoolean(key(dst, GLOBAL), prefs.getBoolean(key(src, GLOBAL), false));
 		editor.putBoolean(key(dst, UDP_IN_TCP), prefs.getBoolean(key(src, UDP_IN_TCP), false));
 		editor.putBoolean(key(dst, REMOTE_DNS), prefs.getBoolean(key(src, REMOTE_DNS), true));
+		editor.putString(key(dst, WS_SERVER), prefs.getString(key(src, WS_SERVER), ""));
+		editor.putString(key(dst, WS_SNI), prefs.getString(key(src, WS_SNI), ""));
+		editor.putInt(key(dst, WS_PORT), prefs.getInt(key(src, WS_PORT), 8888));
+		editor.putInt(key(dst, WS_POOL), prefs.getInt(key(src, WS_POOL), 4));
+		editor.putString(key(dst, WS_USER), prefs.getString(key(src, WS_USER), ""));
+		editor.putString(key(dst, WS_PASS), prefs.getString(key(src, WS_PASS), ""));
 		editor.putStringSet(key(dst, APPS), new HashSet<String>(prefs.getStringSet(key(src, APPS), new HashSet<String>())));
 	}
 
 	private void removeProfile(SharedPreferences.Editor editor, int profile) {
 		editor.remove(key(profile, NAME));
-		editor.remove(key(profile, SOCKS_ADDR));
-		editor.remove(key(profile, SOCKS_UDP_ADDR));
-		editor.remove(key(profile, SOCKS_PORT));
-		editor.remove(key(profile, SOCKS_USER));
-		editor.remove(key(profile, SOCKS_PASS));
 		editor.remove(key(profile, DNS_IPV4));
 		editor.remove(key(profile, DNS_IPV6));
 		editor.remove(key(profile, IPV4));
@@ -147,6 +123,12 @@ public class Preferences
 		editor.remove(key(profile, UDP_IN_TCP));
 		editor.remove(key(profile, REMOTE_DNS));
 		editor.remove(key(profile, APPS));
+		editor.remove(key(profile, WS_SERVER));
+		editor.remove(key(profile, WS_SNI));
+		editor.remove(key(profile, WS_PORT));
+		editor.remove(key(profile, WS_POOL));
+		editor.remove(key(profile, WS_USER));
+		editor.remove(key(profile, WS_PASS));
 	}
 
 	public int getProfileCount() {
@@ -206,56 +188,6 @@ public class Preferences
 		return true;
 	}
 
-	public String getSocksAddress() {
-		return prefs.getString(key(SOCKS_ADDR), "127.0.0.1");
-	}
-
-	public void setSocksAddress(String addr) {
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(key(SOCKS_ADDR), addr);
-		editor.commit();
-	}
-
-	public String getSocksUdpAddress() {
-		return prefs.getString(key(SOCKS_UDP_ADDR), "");
-	}
-
-	public void setSocksUdpAddress(String addr) {
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(key(SOCKS_UDP_ADDR), addr);
-		editor.commit();
-	}
-
-	public int getSocksPort() {
-		return prefs.getInt(key(SOCKS_PORT), 1080);
-	}
-
-	public void setSocksPort(int port) {
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putInt(key(SOCKS_PORT), port);
-		editor.commit();
-	}
-
-	public String getSocksUsername() {
-		return prefs.getString(key(SOCKS_USER), "");
-	}
-
-	public void setSocksUsername(String user) {
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(key(SOCKS_USER), user);
-		editor.commit();
-	}
-
-	public String getSocksPassword() {
-		return prefs.getString(key(SOCKS_PASS), "");
-	}
-
-	public void setSocksPassword(String pass) {
-		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(key(SOCKS_PASS), pass);
-		editor.commit();
-	}
-
 	public String getDnsIpv4() {
 		return prefs.getString(key(DNS_IPV4), "8.8.8.8");
 	}
@@ -291,7 +223,7 @@ public class Preferences
 	}
 
 	public boolean getRemoteDns() {
-		return prefs.getBoolean(key(REMOTE_DNS), true);
+		return prefs.getBoolean(key(REMOTE_DNS), false);
 	}
 
 	public void setRemoteDns(boolean enable) {
@@ -350,64 +282,64 @@ public class Preferences
 		editor.commit();
 	}
 
-	/* Global wstunnel config (empty server = disabled, plain sockstun mode). */
+	/* wstunnel getters/setters are profile-scoped via key(). */
 	public String getWstunnelServer() {
-		return prefs.getString(WS_SERVER, "");
+		return prefs.getString(key(WS_SERVER), "");
 	}
 
 	public void setWstunnelServer(String server) {
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(WS_SERVER, server);
+		editor.putString(key(WS_SERVER), server);
 		editor.commit();
 	}
 
 	public String getWstunnelSni() {
-		return prefs.getString(WS_SNI, "");
+		return prefs.getString(key(WS_SNI), "");
 	}
 
 	public void setWstunnelSni(String sni) {
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(WS_SNI, sni);
+		editor.putString(key(WS_SNI), sni);
 		editor.commit();
 	}
 
 	public int getWstunnelPort() {
-		return prefs.getInt(WS_PORT, 8888);
+		return prefs.getInt(key(WS_PORT), 8888);
 	}
 
 	public void setWstunnelPort(int port) {
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putInt(WS_PORT, port);
+		editor.putInt(key(WS_PORT), port);
 		editor.commit();
 	}
 
 	public int getWstunnelPool() {
-		return prefs.getInt(WS_POOL, 4);
+		return prefs.getInt(key(WS_POOL), 4);
 	}
 
 	public void setWstunnelPool(int pool) {
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putInt(WS_POOL, pool);
+		editor.putInt(key(WS_POOL), pool);
 		editor.commit();
 	}
 
 	public String getWstunnelUser() {
-		return prefs.getString(WS_USER, "");
+		return prefs.getString(key(WS_USER), "");
 	}
 
 	public void setWstunnelUser(String user) {
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(WS_USER, user);
+		editor.putString(key(WS_USER), user);
 		editor.commit();
 	}
 
 	public String getWstunnelPass() {
-		return prefs.getString(WS_PASS, "");
+		return prefs.getString(key(WS_PASS), "");
 	}
 
 	public void setWstunnelPass(String pass) {
 		SharedPreferences.Editor editor = prefs.edit();
-		editor.putString(WS_PASS, pass);
+		editor.putString(key(WS_PASS), pass);
 		editor.commit();
 	}
 
