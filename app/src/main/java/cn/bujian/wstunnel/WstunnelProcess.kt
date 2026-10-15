@@ -79,11 +79,17 @@ class WstunnelProcess(private val binary: File) {
         /** Polls the local socks5 port until it accepts a TCP connection. */
         fun waitForPort(port: Int, timeoutMs: Long = 15_000): Boolean {
             val deadline = System.currentTimeMillis() + timeoutMs
+            var lastError: Exception? = null
             while (System.currentTimeMillis() < deadline) {
                 try {
-                    Socket().use { it.connect(InetSocketAddress("127.0.0.1", port), 300) }
+                    Socket().use { it.connect(InetSocketAddress("127.0.0.1", port), 1_000) }
+                    LogBuffer.append("[wstunnel] port $port probe ok")
                     return true
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    if (lastError?.javaClass != e.javaClass || lastError?.message != e.message) {
+                        lastError = e
+                        LogBuffer.append("[wstunnel] port $port probe: ${e.javaClass.simpleName}: ${e.message}")
+                    }
                     Thread.sleep(200)
                 }
             }

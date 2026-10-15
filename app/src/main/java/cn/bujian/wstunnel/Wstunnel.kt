@@ -3,11 +3,12 @@ package cn.bujian.wstunnel
 import android.content.Context
 
 /**
- * Global single-instance manager for the wstunnel child process.
+ * Manages the wstunnel child process.
  *
- * One instance is shared by all profiles (Q8b): [ensureStarted] restarts the process
- * only when the effective config changed; an empty server means "disabled" and the
- * tunnel falls back to a plain SOCKS5 upstream.
+ * The process is a singleton, but its parameters come from the active Profile:
+ * [ensureStarted] restarts it whenever the profile's effective config changed.
+ * An empty server means "disabled" and the tunnel falls back to the profile's
+ * plain SOCKS5 upstream.
  */
 object Wstunnel {
     private var proc: WstunnelProcess? = null

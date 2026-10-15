@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">wstunnel VPN</string>
-	<string name="socks_addr">SOCKS5 地址</string>
-	<string name="socks_udp_addr">SOCKS5 UDP 地址</string>
-	<string name="socks_port">SOCKS5 端口</string>
-	<string name="socks_user">SOCKS5 用户名</string>
-	<string name="socks_pass">SOCKS5 密码</string>
+	<string name="ws_address">服务器地址（必填）</string>
+	<string name="ws_sni">SNI（可选）</string>
+	<string name="ws_port">本地 SOCKS5 端口</string>
+	<string name="ws_user">用户名（可选）</string>
+	<string name="ws_pass">密码（可选）</string>
+	<string name="ws_pool">线程池（1-64，可选）</string>
 	<string name="dns_ipv4">DNS IPv4</string>
 	<string name="dns_ipv6">DNS IPv6</string>
 	<string name="udp_in_tcp">UDP 经 TCP 中继</string>
@@ -27,12 +28,12 @@
 	<string name="profile_limit">已达配置数量上限（13）</string>
 	<string name="profile_last">无法删除最后一个配置</string>
 	<string name="profile_delete_confirm">删除配置“%s”？</string>
-	<string name="wstunnel_settings">wstunnel 设置（全局）</string>
-	<string name="wstunnel_server">服务器地址（留空则禁用 wstunnel）</string>
-	<string name="wstunnel_sni">SNI 伪装域名（可选）</string>
-	<string name="wstunnel_port">本地 SOCKS5 端口</string>
-	<string name="wstunnel_pool">连接池（1-64）</string>
-	<string name="wstunnel_user">用户名（可选）</string>
-	<string name="wstunnel_pass">密码</string>
-	<string name="wstunnel_saved">已保存</string>
+	<string name="saved">已保存</string>
+	<string name="control_launching">启动中…</string>
+	<string name="start_failed">启动失败，请查看日志</string>
+	<string name="log_title">日志</string>
+	<string name="log_copy">复制</string>
+	<string name="log_copied">已复制到剪贴板</string>
+	<string name="addr_required">请先填写服务器地址</string>
+	<string name="profile_incomplete">请先完成当前配置</string>
 </resources>

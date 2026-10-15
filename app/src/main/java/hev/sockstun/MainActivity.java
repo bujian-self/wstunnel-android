@@ -10,10 +10,16 @@
 package hev.sockstun;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -31,18 +37,20 @@ import com.google.android.material.textfield.TextInputLayout;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 	private Preferences prefs;
-	private TextInputLayout til_socks_addr;
-	private TextInputLayout til_socks_udp_addr;
-	private TextInputLayout til_socks_port;
-	private TextInputLayout til_socks_user;
-	private TextInputLayout til_socks_pass;
+	private TextInputLayout til_ws_address;
+	private TextInputLayout til_ws_sni;
+	private TextInputLayout til_ws_port;
+	private TextInputLayout til_ws_user;
+	private TextInputLayout til_ws_pass;
+	private TextInputLayout til_ws_pool;
 	private TextInputLayout til_dns_ipv4;
 	private TextInputLayout til_dns_ipv6;
-	private EditText edittext_socks_addr;
-	private EditText edittext_socks_udp_addr;
-	private EditText edittext_socks_port;
-	private EditText edittext_socks_user;
-	private EditText edittext_socks_pass;
+	private EditText edittext_ws_address;
+	private EditText edittext_ws_sni;
+	private EditText edittext_ws_port;
+	private EditText edittext_ws_user;
+	private EditText edittext_ws_pass;
+	private EditText edittext_ws_pool;
 	private EditText edittext_dns_ipv4;
 	private EditText edittext_dns_ipv6;
 	private CheckBox checkbox_udp_in_tcp;
@@ -55,8 +63,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	private Button button_control;
 	private Button button_profile_prev;
 	private Button button_profile_next;
-	private Button button_wstunnel;
 	private TextView textview_profile_name;
+
+	/* Launch-in-progress UI: enable is already true (fields locked) while the
+	   service brings up wstunnel first and sockstun after; the button shows a
+	   loading state until the service broadcasts success or failure. */
+	private boolean launching = false;
+	private final Handler launchHandler = new Handler(Looper.getMainLooper());
+	private final Runnable launchTimeout = new Runnable() {
+		@Override
+		public void run() {
+			if (!launching)
+			  return;
+			launching = false;
+			updateControlState();
+			Toast.makeText(getApplicationContext(), R.string.start_failed, Toast.LENGTH_LONG).show();
+		}
+	};
+
+	/* The VPN service runs in :native; SharedPreferences is per-process, so
+	   enable-state changes made there (start success, failure rollback, stop)
+	   arrive here via broadcast and are re-applied to this process's prefs. */
+	private final BroadcastReceiver vpnStateReceiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			boolean enable = intent.getBooleanExtra(TProxyService.EXTRA_ENABLE, prefs.getEnable());
+			prefs.setEnable(enable);
+			if (launching) {
+				launching = false;
+				launchHandler.removeCallbacks(launchTimeout);
+				if (!enable)
+				  Toast.makeText(context, R.string.start_failed, Toast.LENGTH_LONG).show();
+			}
+			updateControlState();
+		}
+	};
 
 	/* Refresh the control state when the tunnel is toggled elsewhere
 	   (e.g. from the Quick Settings tile) while this screen is visible. */
@@ -78,18 +119,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		cn.bujian.wstunnel.LogBuffer.init(getFilesDir());
 		setContentView(R.layout.main);
 
-		til_socks_addr = (TextInputLayout) findViewById(R.id.til_socks_addr);
-		til_socks_udp_addr = (TextInputLayout) findViewById(R.id.til_socks_udp_addr);
-		til_socks_port = (TextInputLayout) findViewById(R.id.til_socks_port);
-		til_socks_user = (TextInputLayout) findViewById(R.id.til_socks_user);
-		til_socks_pass = (TextInputLayout) findViewById(R.id.til_socks_pass);
+		til_ws_address = (TextInputLayout) findViewById(R.id.til_ws_address);
+		til_ws_sni = (TextInputLayout) findViewById(R.id.til_ws_sni);
+		til_ws_port = (TextInputLayout) findViewById(R.id.til_ws_port);
+		til_ws_user = (TextInputLayout) findViewById(R.id.til_ws_user);
+		til_ws_pass = (TextInputLayout) findViewById(R.id.til_ws_pass);
+		til_ws_pool = (TextInputLayout) findViewById(R.id.til_ws_pool);
 		til_dns_ipv4 = (TextInputLayout) findViewById(R.id.til_dns_ipv4);
 		til_dns_ipv6 = (TextInputLayout) findViewById(R.id.til_dns_ipv6);
-		edittext_socks_addr = (EditText) findViewById(R.id.socks_addr);
-		edittext_socks_udp_addr = (EditText) findViewById(R.id.socks_udp_addr);
-		edittext_socks_port = (EditText) findViewById(R.id.socks_port);
-		edittext_socks_user = (EditText) findViewById(R.id.socks_user);
-		edittext_socks_pass = (EditText) findViewById(R.id.socks_pass);
+		edittext_ws_address = (EditText) findViewById(R.id.ws_address);
+		edittext_ws_sni = (EditText) findViewById(R.id.ws_sni);
+		edittext_ws_port = (EditText) findViewById(R.id.ws_port);
+		edittext_ws_user = (EditText) findViewById(R.id.ws_user);
+		edittext_ws_pass = (EditText) findViewById(R.id.ws_pass);
+		edittext_ws_pool = (EditText) findViewById(R.id.ws_pool);
 		edittext_dns_ipv4 = (EditText) findViewById(R.id.dns_ipv4);
 		edittext_dns_ipv6 = (EditText) findViewById(R.id.dns_ipv6);
 		checkbox_ipv4 = (CheckBox) findViewById(R.id.ipv4);
@@ -102,12 +145,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		button_control = (Button) findViewById(R.id.control);
 		button_profile_prev = (Button) findViewById(R.id.profile_prev);
 		button_profile_next = (Button) findViewById(R.id.profile_next);
-		button_wstunnel = (Button) findViewById(R.id.wstunnel_settings);
 		textview_profile_name = (TextView) findViewById(R.id.profile_name);
 
 		button_profile_prev.setOnClickListener(this);
 		button_profile_next.setOnClickListener(this);
-		button_wstunnel.setOnClickListener(this);
 		textview_profile_name.setOnLongClickListener(new View.OnLongClickListener() {
 			@Override
 			public boolean onLongClick(View view) {
@@ -137,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	protected void onStart() {
 		super.onStart();
 		prefs.registerOnChange(prefsListener);
+		registerReceiver(vpnStateReceiver, new IntentFilter(TProxyService.ACTION_STATE),
+			Context.RECEIVER_NOT_EXPORTED);
 	}
 
 	@Override
@@ -149,6 +192,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	protected void onStop() {
 		super.onStop();
 		prefs.unregisterOnChange(prefsListener);
+		unregisterReceiver(vpnStateReceiver);
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		launchHandler.removeCallbacks(launchTimeout);
 	}
 
 	@Override
@@ -160,6 +210,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	}
 
 	@Override
+	public boolean onCreateOptionsMenu(android.view.Menu menu) {
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		if (item.getItemId() == R.id.action_log) {
+			startActivity(new Intent(this, LogActivity.class));
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
 	public void onClick(View view) {
 		if (view == checkbox_global || view == checkbox_remote_dns) {
 			savePrefs();
@@ -167,13 +232,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		} else if (view == button_apps) {
 			startActivity(new Intent(this, AppListActivity.class));
 		} else if (view == button_save) {
-			savePrefs();
-			Context context = getApplicationContext();
-			Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show();
+			if (!savePrefs()) {
+				Toast.makeText(this, R.string.addr_required, Toast.LENGTH_SHORT).show();
+				return;
+			}
+			Toast.makeText(getApplicationContext(), R.string.saved, Toast.LENGTH_SHORT).show();
 		} else if (view == button_control) {
 			boolean isEnable = prefs.getEnable();
-			prefs.setEnable(!isEnable);
-			savePrefs();
+			if (!isEnable) {
+				if (!savePrefs()) {
+					Toast.makeText(this, R.string.addr_required, Toast.LENGTH_SHORT).show();
+					return;
+				}
+				prefs.setEnable(true);
+				launching = true;
+				launchHandler.removeCallbacks(launchTimeout);
+				launchHandler.postDelayed(launchTimeout, 30_000);
+			} else {
+				prefs.setEnable(false);
+				launching = false;
+				launchHandler.removeCallbacks(launchTimeout);
+			}
 			updateUI();
 			Intent intent = new Intent(this, TProxyService.class);
 			if (isEnable)
@@ -185,54 +264,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			switchProfile(-1);
 		} else if (view == button_profile_next) {
 			switchProfile(1);
-		} else if (view == button_wstunnel) {
-			showWstunnelSettings();
 		}
-	}
-
-	private void showWstunnelSettings() {
-		android.view.View form = getLayoutInflater().inflate(R.layout.wstunnel_settings, null);
-		final EditText ws_server = (EditText) form.findViewById(R.id.ws_server);
-		final EditText ws_sni = (EditText) form.findViewById(R.id.ws_sni);
-		final EditText ws_port = (EditText) form.findViewById(R.id.ws_port);
-		final EditText ws_pool = (EditText) form.findViewById(R.id.ws_pool);
-		final EditText ws_user = (EditText) form.findViewById(R.id.ws_user);
-		final EditText ws_pass = (EditText) form.findViewById(R.id.ws_pass);
-
-		ws_server.setText(prefs.getWstunnelServer());
-		ws_sni.setText(prefs.getWstunnelSni());
-		ws_port.setText(Integer.toString(prefs.getWstunnelPort()));
-		ws_pool.setText(Integer.toString(prefs.getWstunnelPool()));
-		ws_user.setText(prefs.getWstunnelUser());
-		ws_pass.setText(prefs.getWstunnelPass());
-
-		final boolean editable = !prefs.getEnable();
-		new AlertDialog.Builder(this)
-			.setTitle(R.string.wstunnel_settings)
-			.setView(form)
-			.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					if (!editable)
-					  return;
-					prefs.setWstunnelServer(ws_server.getText().toString().trim());
-					prefs.setWstunnelSni(ws_sni.getText().toString().trim());
-					try {
-						prefs.setWstunnelPort(Integer.parseInt(ws_port.getText().toString().trim()));
-					} catch (NumberFormatException e) {
-					}
-					try {
-						int pool = Integer.parseInt(ws_pool.getText().toString().trim());
-						prefs.setWstunnelPool(Math.max(1, Math.min(64, pool)));
-					} catch (NumberFormatException e) {
-					}
-					prefs.setWstunnelUser(ws_user.getText().toString().trim());
-					prefs.setWstunnelPass(ws_pass.getText().toString());
-					Toast.makeText(getApplicationContext(), R.string.wstunnel_saved, Toast.LENGTH_SHORT).show();
-				}
-			})
-			.setNegativeButton(android.R.string.cancel, null)
-			.show();
 	}
 
 	private void switchProfile(int direction) {
@@ -259,10 +291,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 						showProfileNameDialog(R.string.profile_rename, false);
 						break;
 					case 1:
-						if (prefs.getProfileCount() >= Preferences.MAX_PROFILES)
-						  Toast.makeText(MainActivity.this, R.string.profile_limit, Toast.LENGTH_SHORT).show();
-						else
-						  showProfileNameDialog(R.string.profile_add, true);
+						addProfileFlow();
 						break;
 					case 2:
 						deleteProfile();
@@ -271,6 +300,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 				}
 			})
 			.show();
+	}
+
+	/* Adding a profile requires a complete current one: persist the page
+	   first, then clone into the new profile via the naming dialog. */
+	private void addProfileFlow() {
+		if (prefs.getProfileCount() >= Preferences.MAX_PROFILES) {
+			Toast.makeText(this, R.string.profile_limit, Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (edittext_ws_address.getText().toString().trim().isEmpty()) {
+			Toast.makeText(this, R.string.profile_incomplete, Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (!savePrefs()) {
+			Toast.makeText(this, R.string.addr_required, Toast.LENGTH_SHORT).show();
+			return;
+		}
+		showProfileNameDialog(R.string.profile_add, true);
 	}
 
 	private void showProfileNameDialog(int titleId, final boolean add) {
@@ -324,11 +371,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 	}
 
 	private void updateUI() {
-		edittext_socks_addr.setText(prefs.getSocksAddress());
-		edittext_socks_udp_addr.setText(prefs.getSocksUdpAddress());
-		edittext_socks_port.setText(Integer.toString(prefs.getSocksPort()));
-		edittext_socks_user.setText(prefs.getSocksUsername());
-		edittext_socks_pass.setText(prefs.getSocksPassword());
+		edittext_ws_address.setText(prefs.getWstunnelServer());
+		edittext_ws_sni.setText(prefs.getWstunnelSni());
+		edittext_ws_port.setText(Integer.toString(prefs.getWstunnelPort()));
+		edittext_ws_user.setText(prefs.getWstunnelUser());
+		edittext_ws_pass.setText(prefs.getWstunnelPass());
+		edittext_ws_pool.setText(Integer.toString(prefs.getWstunnelPool()));
 		edittext_dns_ipv4.setText(prefs.getDnsIpv4());
 		edittext_dns_ipv6.setText(prefs.getDnsIpv6());
 		checkbox_ipv4.setChecked(prefs.getIpv4());
@@ -346,11 +394,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		button_profile_prev.setEnabled(editable);
 		button_profile_next.setEnabled(editable);
 		textview_profile_name.setEnabled(editable);
-		til_socks_addr.setEnabled(editable);
-		til_socks_udp_addr.setEnabled(editable);
-		til_socks_port.setEnabled(editable);
-		til_socks_user.setEnabled(editable);
-		til_socks_pass.setEnabled(editable);
+		til_ws_address.setEnabled(editable);
+		til_ws_sni.setEnabled(editable);
+		til_ws_port.setEnabled(editable);
+		til_ws_user.setEnabled(editable);
+		til_ws_pass.setEnabled(editable);
+		til_ws_pool.setEnabled(editable);
 		til_dns_ipv4.setEnabled(editable && !prefs.getRemoteDns());
 		til_dns_ipv6.setEnabled(editable && !prefs.getRemoteDns());
 		checkbox_udp_in_tcp.setEnabled(editable);
@@ -361,18 +410,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		button_apps.setEnabled(editable && !prefs.getGlobal());
 		button_save.setEnabled(editable);
 
-		if (editable)
-		  button_control.setText(R.string.control_enable);
-		else
-		  button_control.setText(R.string.control_disable);
+		if (launching) {
+			button_control.setText(R.string.control_launching);
+			button_control.setEnabled(false);
+		} else {
+			button_control.setEnabled(true);
+			if (editable)
+			  button_control.setText(R.string.control_enable);
+			else
+			  button_control.setText(R.string.control_disable);
+		}
 	}
 
-	private void savePrefs() {
-		prefs.setSocksAddress(edittext_socks_addr.getText().toString());
-		prefs.setSocksUdpAddress(edittext_socks_udp_addr.getText().toString());
-		prefs.setSocksPort(Integer.parseInt(edittext_socks_port.getText().toString()));
-		prefs.setSocksUsername(edittext_socks_user.getText().toString());
-		prefs.setSocksPassword(edittext_socks_pass.getText().toString());
+	/* Returns false when the mandatory server address is missing — the page
+	   must not be persisted (and the tunnel must not start) in that state. */
+	private boolean savePrefs() {
+		String addr = edittext_ws_address.getText().toString().trim();
+		if (addr.isEmpty())
+		  return false;
+
+		prefs.setWstunnelServer(addr);
+		prefs.setWstunnelSni(edittext_ws_sni.getText().toString().trim());
+		try {
+			prefs.setWstunnelPort(Integer.parseInt(edittext_ws_port.getText().toString().trim()));
+		} catch (NumberFormatException e) {
+		}
+		try {
+			int pool = Integer.parseInt(edittext_ws_pool.getText().toString().trim());
+			prefs.setWstunnelPool(Math.max(1, Math.min(64, pool)));
+		} catch (NumberFormatException e) {
+		}
+		prefs.setWstunnelUser(edittext_ws_user.getText().toString().trim());
+		prefs.setWstunnelPass(edittext_ws_pass.getText().toString());
 		prefs.setDnsIpv4(edittext_dns_ipv4.getText().toString());
 		prefs.setDnsIpv6(edittext_dns_ipv6.getText().toString());
 		if (!checkbox_ipv4.isChecked() && !checkbox_ipv6.isChecked())
@@ -382,5 +451,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 		prefs.setGlobal(checkbox_global.isChecked());
 		prefs.setUdpInTcp(checkbox_udp_in_tcp.isChecked());
 		prefs.setRemoteDns(checkbox_remote_dns.isChecked());
+		return true;
 	}
 }
