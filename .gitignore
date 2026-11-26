@@ -30,6 +30,9 @@ render.experimental.xml
 *.jks
 *.keystore
 
+# Signing config (contains passwords, keep local only)
+store.properties
+
 # Google Services (e.g. APIs or Firebase)
 google-services.json
 

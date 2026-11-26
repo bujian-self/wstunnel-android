@@ -21,6 +21,7 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("../keystore/upload-keystore.jks")
+            // 请使用自己的密码：签名密码不要写入仓库，请在本机自行填写
             storePassword = ""
             keyAlias = "upload"
             keyPassword = ""
