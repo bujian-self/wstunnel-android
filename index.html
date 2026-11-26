@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>wstunnel-android · 项目介绍</title>
+<meta name="description" content="wstunnel 的非官方 Android 客户端：完整 VPN 版与纯 SOCKS5 服务版。">
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg-soft: #131e35;
+    --card: #ffffff;
+    --ink: #1e293b;
+    --ink-soft: #64748b;
+    --line: #e2e8f0;
+    --accent: #0ea5a4;
+    --accent-dark: #0f766e;
+    --warn-bg: #fff7ed;
+    --warn-line: #fdba74;
+    --code-bg: #f1f5f9;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    background: #f8fafc;
+    line-height: 1.7;
+  }
+
+  a { color: var(--accent-dark); }
+
+  .hero {
+    position: relative;
+    background: radial-gradient(1200px 400px at 20% -10%, #1e3a5f 0%, var(--bg) 60%);
+    color: #e2e8f0;
+    padding: 64px 24px 56px;
+  }
+
+  .github-link {
+    position: absolute;
+    top: 24px;
+    right: max(24px, calc((100% - 960px) / 2 + 24px));
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #e2e8f0;
+    text-decoration: none;
+    border: 1px solid rgba(226, 232, 240, .3);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .35);
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+  }
+
+  .github-link:hover,
+  .github-link:focus-visible {
+    color: #99f6e4;
+    border-color: rgba(153, 246, 228, .6);
+    background: rgba(15, 23, 42, .7);
+  }
+
+  .github-link svg { display: block; }
+
+  .wrap { max-width: 960px; margin: 0 auto; }
+
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #99f6e4;
+    border: 1px solid rgba(153, 246, 228, .4);
+    border-radius: 999px;
+    padding: 4px 12px;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    margin: 0 0 12px;
+    font-size: 40px;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+  }
+
+  .hero p {
+    margin: 0;
+    max-width: 640px;
+    color: #cbd5e1;
+    font-size: 16px;
+  }
+
+  main { padding: 40px 24px 24px; }
+
+  section { margin-bottom: 44px; }
+
+  h2 {
+    font-size: 22px;
+    margin: 0 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .notice {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-line);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    font-size: 14px;
+    color: #7c2d12;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  }
+
+  .card h3 {
+    margin: 0 0 6px;
+    font-size: 17px;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 12px;
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: #ccfbf1;
+    color: var(--accent-dark);
+    margin-bottom: 12px;
+  }
+
+  .tag.frozen { background: #e2e8f0; color: #475569; }
+
+  .card ul { margin: 10px 0 0; padding-left: 18px; }
+  .card li { margin: 4px 0; font-size: 14px; }
+  .card p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .flow .step {
+    flex: 1 1 150px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .flow .step strong { display: block; font-size: 13px; }
+  .flow .step span { color: var(--ink-soft); }
+
+  .flow .arrow {
+    align-self: center;
+    color: #94a3b8;
+    font-size: 18px;
+    padding: 0 2px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  th { background: var(--bg-soft); color: #cbd5e1; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+
+  code {
+    background: var(--code-bg);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 13px;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  pre {
+    background: var(--bg);
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-size: 13px;
+  }
+
+  pre code { background: none; padding: 0; color: inherit; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 28px 24px 40px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  footer strong { color: var(--ink); }
+  footer ul { margin: 10px 0 0; padding-left: 18px; }
+  footer li { margin: 3px 0; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 30px; }
+    .hero { padding: 72px 18px 40px; }
+    .github-link { top: 16px; right: 16px; padding: 6px 12px; }
+    main { padding: 28px 18px 12px; }
+    .flow .arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <a class="github-link" href="https://github.com/bujian-self/wstunnel-android"
+     target="_blank" rel="noopener noreferrer" aria-label="在 GitHub 上查看本项目">
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden="true">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    GitHub
+  </a>
+  <div class="wrap">
+    <div class="badge">Android · wstunnel client</div>
+    <h1>wstunnel-android</h1>
+    <p>
+      wstunnel 的第三方 Android 客户端，提供两个 APK 形态：基于 sockstun 的全设备 VPN 版，
+      以及只暴露本地 SOCKS5 端口的轻量服务版。
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section>
+    <div class="notice">
+      <strong>非官方项目：</strong>本项目为 wstunnel 的第三方客户端，与 wstunnel 上游作者
+      （Erèbe - Romain Gerard）无隶属、授权或背书关系。“wstunnel” 名称仅用于说明所连接的协议与服务端。
+    </div>
+  </section>
+
+  <section>
+    <h2>产品形态</h2>
+    <div class="grid">
+      <article class="card">
+        <span class="tag">完整 VPN 版</span>
+        <h3>wstunnel VPN</h3>
+        <p><code>cn.bujian.wstunnel</code> · v0.2.1-beta</p>
+        <ul>
+          <li>以 sockstun（hev-socks5-tunnel）为基底的全设备 VPN</li>
+          <li>内嵌 wstunnel v9.7.4 客户端，支持最多 13 组 Profile</li>
+          <li>按 App 分流、IPv4/IPv6、远程 DNS、UDP 经 TCP 中继</li>
+          <li>VPN 服务运行在独立的 <code>:native</code> 进程</li>
+        </ul>
+      </article>
+
+      <article class="card">
+        <span class="tag frozen">已冻结</span>
+        <h3>wstunnel Client</h3>
+        <p><code>cn.bujian.wstunnel.client</code> · v0.1.0-beta</p>
+        <ul>
+          <li>只运行 wstunnel 子进程，不做 VPN 接管</li>
+          <li>对外暴露本地 SOCKS5 端口，供其他代理前端使用</li>
+          <li>仓库保留已发布内容，作为独立项目不再参与构建发布</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>链路与工作原理</h2>
+    <div class="flow">
+      <div class="step"><strong>VpnService</strong><span>建立 tun 虚拟网卡</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><strong>tun2socks</strong><span>hev-socks5-tunnel 转发流量</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><strong>本地 SOCKS5</strong><span>127.0.0.1:&lt;端口&gt;</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><strong>wstunnel</strong><span>子进程封装 WebSocket / HTTP2</span></div>
+      <div class="arrow">→</div>
+      <div class="step"><strong>wstunnel server</strong><span>远端服务端出口</span></div>
+    </div>
+    <p style="font-size:14px;color:var(--ink-soft);margin-top:14px;">
+      上游只有 wstunnel 一个来源：tun2socks 的 SOCKS5 出口恒为
+      <code>127.0.0.1:&lt;当前 Profile 的本地端口&gt;</code>，不存在回落到外部 SOCKS5 的第二来源。
+      wstunnel 进程同一时刻仅有一个，参数变化时自动重启。
+    </p>
+  </section>
+
+  <section>
+    <h2>技术规格</h2>
+    <table>
+      <tbody>
+        <tr><th style="width:34%">语言 / 构建</th><td>Kotlin、Java、C（NDK Build）</td></tr>
+        <tr><th>运行要求</th><td>Android 7.0+（minSdk 24），targetSdk 34</td></tr>
+        <tr><th>ABI</th><td>arm64-v8a</td></tr>
+        <tr><th>核心组件</th><td>hev-socks5-tunnel、lwip、hev-task-system、libyaml、wstunnel v9.7.4</td></tr>
+        <tr><th>UI 依赖</th><td>AndroidX AppCompat 1.7.0、Material Components 1.12.0</td></tr>
+        <tr><th>日志</th><td><code>filesDir/wstunnel.log</code>，主进程与 <code>:native</code> 进程共享</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>构建</h2>
+    <pre><code># 完整 VPN 版
+cd app
+./gradlew assembleRelease
+
+# 纯 SOCKS5 服务版（已冻结，仅供归档）
+cd client
+./gradlew assembleRelease</code></pre>
+    <p style="font-size:14px;color:var(--ink-soft);">
+      签名配置位于各模块的 <code>store.properties</code> / <code>build.gradle.kts</code>，
+      请使用自己的密钥，不要将密码写入仓库。
+    </p>
+  </section>
+
+  <section>
+    <h2>开源许可</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>本项目</h3>
+        <p>自有代码以 <strong>MIT License</strong> 发布，详见仓库根目录的
+          <a href="LICENSE">LICENSE</a>。</p>
+      </article>
+      <article class="card">
+        <h3>第三方组件</h3>
+        <ul>
+          <li>wstunnel — BSD-3-Clause</li>
+          <li>hev-socks5-tunnel / core / task-system / yaml — MIT</li>
+          <li>lwip — BSD-3-Clause</li>
+          <li>Rust 生态组件（tokio、hyper、rustls 等）— MIT / Apache-2.0 / ISC</li>
+        </ul>
+        <p style="margin-top:10px;">全文见
+          <a href="THIRD-PARTY-NOTICES.md">THIRD-PARTY-NOTICES.md</a>。</p>
+      </article>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>版权声明</strong></p>
+    <p>
+      © 2026 bujian-self。本项目自有代码以 MIT 许可证发布；App 与仓库中随附的第三方组件
+      版权归各自作者所有，并遵循其各自的许可证条款。
+    </p>
+    <ul>
+      <li>wstunnel — Copyright (c) 2016-2024, Erèbe - Romain Gerard，BSD-3-Clause</li>
+      <li>hev-socks5-tunnel、hev-socks5-core、hev-task-system、yaml — Copyright (c) 2022 hev，MIT</li>
+      <li>lwip — Copyright (c) 2001, 2002 Swedish Institute of Computer Science，BSD-3-Clause</li>
+      <li>Rust 生态组件（tokio、hyper、rustls 等）— MIT / Apache-2.0 / ISC</li>
+    </ul>
+    <p style="margin-top:14px;">
+      本项目为非官方客户端，与上述第三方项目的作者无隶属或背书关系。
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>
