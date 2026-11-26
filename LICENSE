@@ -19,3 +19,23 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+--------------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------------
+
+The MIT license above covers the original code of this project. This project
+also includes third-party software whose copyrights belong to their respective
+authors and which is distributed under its own license terms. The full texts
+are reproduced in THIRD-PARTY-NOTICES.md and, inside the application, under
+"Open source licenses" (开源许可).
+
+- wstunnel (https://github.com/erebe/wstunnel), BSD-3-Clause,
+  Copyright (c) 2016-2024, Erèbe - Romain Gerard.
+  Bundled as a prebuilt executable (jniLibs/libwstunnel.so).
+- hev-socks5-tunnel, hev-socks5-core, hev-task-system, yaml
+  (https://github.com/heiher), MIT, Copyright (c) 2022 hev.
+- lwip (https://github.com/heiher/lwip), BSD-3-Clause,
+  Copyright (c) 2001, 2002 Swedish Institute of Computer Science.
+- Rust ecosystem crates statically linked into the wstunnel executable
+  (tokio, hyper, rustls, etc.), MIT / Apache-2.0 / ISC.

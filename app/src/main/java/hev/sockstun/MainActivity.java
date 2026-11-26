@@ -221,6 +221,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 			startActivity(new Intent(this, LogActivity.class));
 			return true;
 		}
+		if (item.getItemId() == R.id.action_licenses) {
+			startActivity(new Intent(this, LicensesActivity.class));
+			return true;
+		}
 		return super.onOptionsItemSelected(item);
 	}
 

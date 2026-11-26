@@ -36,4 +36,6 @@
 	<string name="log_copied">已复制到剪贴板</string>
 	<string name="addr_required">请先填写服务器地址</string>
 	<string name="profile_incomplete">请先完成当前配置</string>
+	<string name="licenses_title">开源许可</string>
+	<string name="licenses_unavailable">无法读取许可文本</string>
 </resources>

@@ -1,0 +1,52 @@
+本应用（wstunnel Client）包含以下第三方开源软件。
+各组件的版权归其原作者所有，并遵循下列许可证。
+
+组件清单
+--------
+wstunnel (v9.7.4)                     BSD-3-Clause   https://github.com/erebe/wstunnel
+Rust 生态组件 (tokio/hyper/rustls 等)  MIT/Apache-2.0/ISC
+
+wstunnel 以预编译二进制形式原样打包，仅重命名为 libwstunnel.so 以便 Android
+在安装时解压并赋予可执行权限。本应用不包含 hev-socks5-tunnel、lwip 等
+VPN 相关组件。
+
+================================================================
+wstunnel — BSD 3-Clause License
+================================================================
+
+Copyright (c) 2016-2024, Erèbe - Romain Gerard
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+================================================================
+Rust 生态组件 — MIT / Apache-2.0 / ISC
+================================================================
+
+wstunnel 可执行文件由 Rust 编写，并以静态链接的方式包含 tokio、hyper、rustls
+等开源组件。这些组件分别以 MIT、Apache-2.0 或 ISC 许可证发布。完整依赖树
+及其版权行可通过 wstunnel 对应版本源码的 cargo metadata 输出获取。

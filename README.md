@@ -1,5 +1,9 @@
 # wstunnel-android
 
+> **非官方项目**：本项目是 wstunnel 的第三方 Android 客户端，与 wstunnel 上游作者
+> （Erèbe - Romain Gerard）无隶属、授权或背书关系。"wstunnel" 名称仅用于说明所
+> 连接的协议与服务端。
+
 wstunnel 的 Android 客户端，两个 APK 形态：完整 VPN 版（app，基于 sockstun）与纯 SOCKS5 服务版（client）。
 
 ## Language
@@ -45,3 +49,11 @@ _Avoid_: 主服务
 **文件日志**：
 `filesDir/wstunnel.log`，app 主进程与 `:native` 进程共享的唯一日志通道。
 _Avoid_: LogBuffer 内存缓冲（已废弃的实现说法）
+
+## 许可证
+
+本项目自身代码以 MIT 许可证发布，见 [LICENSE](LICENSE)。
+
+项目包含的第三方开源组件（wstunnel、hev-socks5-tunnel、lwip 等）版权归各自
+作者所有，其许可证全文见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)；
+App 内可通过「开源许可」页面查看同一份声明。

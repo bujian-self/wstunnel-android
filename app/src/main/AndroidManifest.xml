@@ -46,6 +46,7 @@
 		</activity>
 		<activity android:name=".AppListActivity" android:label="@string/app_name"/>
 		<activity android:name=".LogActivity" android:label="@string/log_title"/>
+		<activity android:name=".LicensesActivity" android:label="@string/licenses_title"/>
 	</application>
 	<uses-permission android:name="android.permission.INTERNET"/>
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>

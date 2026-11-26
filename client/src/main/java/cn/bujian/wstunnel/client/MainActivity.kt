@@ -149,6 +149,13 @@ class MainActivity : Activity() {
         btnRow.addView(toggleButton, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f).apply { leftMargin = pad })
         form.addView(btnRow, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = pad })
 
+        val licensesButton = Button(this).apply {
+            text = getString(R.string.licenses_title)
+            isAllCaps = false
+            setOnClickListener { showLicenses() }
+        }
+        form.addView(licensesButton, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = pad })
+
         configPage = ScrollView(this).apply { addView(form) }
         outer.addView(configPage, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
 
@@ -175,6 +182,30 @@ class MainActivity : Activity() {
         logPage.visibility = if (config) View.GONE else View.VISIBLE
         configTab.alpha = if (config) 1.0f else 0.5f
         logTab.alpha = if (config) 0.5f else 1.0f
+    }
+
+    /** Third-party license text ships as a raw resource so it is present in every APK build. */
+    private fun showLicenses() {
+        val text = runCatching {
+            resources.openRawResource(R.raw.third_party_licenses)
+                .bufferedReader(Charsets.UTF_8)
+                .use { it.readText() }
+        }.getOrElse { getString(R.string.licenses_unavailable) }
+
+        val padding = (16 * resources.displayMetrics.density).toInt()
+        val content = TextView(this).apply {
+            this.text = text
+            textSize = 11f
+            typeface = Typeface.MONOSPACE
+            setPadding(padding, padding, padding, padding)
+            setTextIsSelectable(true)
+        }
+        val scroll = ScrollView(this).apply { addView(content) }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.licenses_title)
+            .setView(scroll)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     override fun onResume() {
